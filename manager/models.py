@@ -47,6 +47,10 @@ class Category(models.Model):
             for cat in list_of_categories:
                 Category.objects.create(user=instance, name=cat)
 
+    class Meta:
+        verbose_name_plural = 'categories'
+        ordering = ['user']
+
 
 class Transaction(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
@@ -59,3 +63,6 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'{self.owner} completed a trans for the amount {self.sum_of_transaction} c.u.'
+
+    class Meta:
+        ordering = ['owner']

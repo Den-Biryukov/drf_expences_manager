@@ -35,7 +35,6 @@ class ListTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         exclude = ('id',)
-        depth = 1
 
 
 class BalanceAdminSerializer(serializers.ModelSerializer):

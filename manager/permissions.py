@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 
 
 class IsOwner(BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, obj):
         return bool(
-            request.user.is_authenticated and obj.user == request.user
+            request.user.is_authenticated and obj.owner == request.user
         )

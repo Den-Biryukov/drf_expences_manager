@@ -55,14 +55,14 @@ class UpdateDestroyCategoryAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
-    permission_classes = (IsOwner,)
+    permission_classes = (IsAuthenticated,)
 
 
 class ListCreateBalanceAPIView(generics.ListCreateAPIView):
     """Get and replenishment user amount"""
 
     serializer_class = BalanceSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Balance.objects.filter(user=self.request.user)
@@ -78,6 +78,7 @@ class ListTransactionAPIView(generics.ListAPIView):
     queryset = Transaction.objects.all()
     serializer_class = ListTransactionSerializer
     pagination_class = ListPagination
+    permission_classes = (IsAuthenticated,)
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filter_fields = ['category', 'sum_of_transaction', 'organization']
     ordering_fields = ['category', 'sum_of_transaction', 'time_of_transaction', 'organization']

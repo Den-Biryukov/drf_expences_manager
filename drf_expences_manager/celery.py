@@ -18,8 +18,8 @@ def debug_task(self):
 
 
 app.conf.beat_schedule = {
-    'send-mail-everyday-day': {
+    'send-mail-everyday-day-at-9.00am-(UTC+3)': {
         'task': 'manager.tasks.send_beat_mail',
-        'schedule': crontab(minute=0, hour=7),
+        'schedule': crontab(minute=0, hour=6),
     },
 }

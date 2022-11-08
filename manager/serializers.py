@@ -91,4 +91,4 @@ class TransactionUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ('to_user', 'time_of_transaction', 'sum_of_transaction', 'owner')
+        fields = ('to_user', 'time_of_transaction', 'sum_of_transaction', 'owner', 'description')

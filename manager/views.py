@@ -1,17 +1,65 @@
+from rest_framework.views import APIView
 from rest_framework import generics
-from manager.serializers import BalanceSerializer, BalanceAdminSerializer, TransactionUserSerializer, \
-                                ListTransactionsSerializer, TransactionCategorySerializer
-# from manager.serializers import CatatSerializer
 from rest_framework.response import Response
-from manager.models import Balance, Transaction
-from manager.permissions import IsOwner
+from django.db.models import Max, Min, Avg
+from django.db.models.functions import Round
+from manager.models import Balance, Category, Transaction
+from manager.serializers import CategorySerializer, BalanceSerializer, \
+                                ListTransactionSerializer, BalanceAdminSerializer, TransactionAdminSerializer, \
+                                TransactionCategoryListSerializer, TransactionUserSerializer, \
+                                TransactionCategoryPostSerializer
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from django.contrib.auth.models import User
+from manager.permissions import IsOwner
 from manager.pagination import ListPagination
-# from manager.models import Catat
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+from django.contrib.auth.models import User
+
+
+class ListUserStatisticAPIView(APIView):
+    """Show some user statistic"""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response(
+            {'total transactions': Transaction.objects.filter(owner=request.user).count(),
+             'max sum of transaction':
+                 Transaction.objects.filter(owner=request.user).
+                 aggregate(res=Max('sum_of_transaction'))['res'],
+             'min sum of transaction':
+                 Transaction.objects.filter(owner=request.user).
+                 aggregate(res=Min('sum_of_transaction'))['res'],
+             'avg sum of transaction':
+                 Transaction.objects.filter(owner=request.user).
+                 aggregate(res=Round(Avg('sum_of_transaction'), 2))['res']
+             }
+        )
+
+
+class ListCreateCategoryAPIView(generics.ListCreateAPIView):
+    """Show user categories. Create custom categories"""
+
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
+
+    serializer_class = CategorySerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class UpdateDestroyCategoryAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Update and delete user categories"""
+
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
+
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    permission_classes = (IsOwner,)
 
 
 class ListCreateBalanceAPIView(generics.ListCreateAPIView):
+    """Get and replenishment user amount"""
 
     serializer_class = BalanceSerializer
     permission_classes = (IsOwner,)
@@ -21,11 +69,22 @@ class ListCreateBalanceAPIView(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         Balance.objects.filter(user=request.user).delete()
-
         return self.create(request, *args, **kwargs)
 
 
-class ListBalanceAdminAPIView(generics.ListAPIView):
+class ListTransactionAPIView(generics.ListAPIView):
+    """Show user transactions"""
+
+    queryset = Transaction.objects.all()
+    serializer_class = ListTransactionSerializer
+    pagination_class = ListPagination
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_fields = ['category', 'sum_of_transaction', 'organization']
+    ordering_fields = ['category', 'sum_of_transaction', 'time_of_transaction', 'organization']
+
+
+class ListAllBalancesForAdminAPIView(generics.ListAPIView):
+    """Show balance of each user for admin"""
 
     queryset = Balance.objects.all()
     serializer_class = BalanceAdminSerializer
@@ -33,19 +92,27 @@ class ListBalanceAdminAPIView(generics.ListAPIView):
     pagination_class = ListPagination
 
 
-class ListTransactionsAPIView(generics.ListAPIView):
+class ListAllTransactionsForAdminAPIView(generics.ListAPIView):
+    """Show transaction of each user for admin"""
 
     queryset = Transaction.objects.all()
-    serializer_class = ListTransactionsSerializer
+    serializer_class = TransactionAdminSerializer
+    permission_classes = (IsAdminUser,)
     pagination_class = ListPagination
 
 
-class TransactionsCategoryAPIView(generics.ListCreateAPIView):
+class TransactionCategoryAPIView(generics.ListCreateAPIView):
+    """Make a transaction by category"""
 
     queryset = Transaction.objects.filter(to_user__exact='')
-    serializer_class = TransactionCategorySerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = ListPagination
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TransactionCategoryListSerializer
+        else:
+            return TransactionCategoryPostSerializer
 
     def post(self, request, *args, **kwargs):
 
@@ -65,9 +132,11 @@ class TransactionsCategoryAPIView(generics.ListCreateAPIView):
             return Response('Enter numbers')
 
 
-class TransactionsUserAPIView(generics.ListCreateAPIView):
+class TransactionUserAPIView(generics.ListCreateAPIView):
+    """Make a transaction per suer"""
 
-    queryset = Transaction.objects.filter(category__exact='', organization__exact='')
+    # queryset = Transaction.objects.filter(organization='transaction to user')
+    queryset = Transaction.objects.filter(organization__exact=None)
     serializer_class = TransactionUserSerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = ListPagination
@@ -91,11 +160,3 @@ class TransactionsUserAPIView(generics.ListCreateAPIView):
                 return self.create(request, *args, **kwargs)
         else:
             return Response('Enter numbers')
-
-
-
-
-#
-# class CatatAPIView(generics.ListCreateAPIView):
-#     queryset = Catat.objects.all()
-#     serializer_class = CatatSerializer

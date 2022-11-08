@@ -1,8 +1,14 @@
 from rest_framework import serializers
-from .models import Balance
-from .models import Transaction
-# from .models import Catat
-# from .models import Replenishment
+from .models import Balance, Category, Transaction
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 class BalanceSerializer(serializers.ModelSerializer):
@@ -14,42 +20,63 @@ class BalanceSerializer(serializers.ModelSerializer):
         fields = ('user', 'amount')
 
 
+class ListTransactionSerializer(serializers.ModelSerializer):
+
+    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_category_name(self, obj):
+        if hasattr(obj.category, 'name'):
+            return obj.category.name
+        else:
+            return 'transaction to user'
+
+    category = serializers.SerializerMethodField('get_category_name')
+
+    class Meta:
+        model = Transaction
+        exclude = ('id',)
+        depth = 1
+
+
 class BalanceAdminSerializer(serializers.ModelSerializer):
 
-    def get_id_and_username(self, obj):
+    def get_user_id_and_username(self, obj):
         return {'id': obj.user.id, 'username': obj.user.username}
 
-    user = serializers.SerializerMethodField('get_id_and_username')
+    user = serializers.SerializerMethodField('get_user_id_and_username')
 
     class Meta:
         model = Balance
         fields = '__all__'
 
 
-# class ReplenishmentSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = Replenishment
-#         fields = '__all__'
+class TransactionAdminSerializer(serializers.ModelSerializer):
 
-#
+    def get_user_id_and_username(self, obj):
+        return {'id': obj.user.id, 'username': obj.user.username}
+
+    user = serializers.SerializerMethodField('get_user_id_and_username')
+
+    class Meta:
+        model = Balance
+        fields = '__all__'
 
 
-class ListTransactionsSerializer(serializers.ModelSerializer):
+class TransactionCategoryListSerializer(serializers.ModelSerializer):
 
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-   #  def get_category_name(self, obj):
-   #      return {'cat_name': obj.categories.name}
-   #
-   # category = serializers.SerializerMethodField('get_category_name')
+    def get_category_name(self, obj):
+        return obj.category.name
+
+    category = serializers.SerializerMethodField('get_category_name')
 
     class Meta:
         model = Transaction
-        exclude = ('id',)
+        exclude = ('id', 'to_user')
 
 
-class TransactionCategorySerializer(serializers.ModelSerializer):
+class TransactionCategoryPostSerializer(serializers.ModelSerializer):
 
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -65,17 +92,3 @@ class TransactionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('to_user', 'time_of_transaction', 'sum_of_transaction', 'owner')
-
-
-
-
-
-
-
-# class CatatSerializer(serializers.ModelSerializer):
-#
-#     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-#
-#     class Meta:
-#         model = Catat
-#         fields = '__all__'

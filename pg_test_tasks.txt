@@ -1,0 +1,34 @@
+1 Task:
+
+SELECT notebooks_brand.title, COUNT(*)
+FROM notebooks_brand
+INNER JOIN notebooks_notebook ON notebooks_brand.id = notebooks_notebook.brand_id
+GROUP BY notebooks_brand.title
+ORDER BY COUNT(*) DESC;
+
+
+2 Task:
+
+SELECT
+  CASE
+    WHEN (width/5 - floor(width/5) <> 0) THEN (width + (5 - (width - ((floor((trunc(width)) / 5))*5))))
+    ELSE width
+  END
+  AS round_width,
+    CASE
+    WHEN (depth/5 - floor(depth/5) <> 0) THEN (depth + (5 - (depth - ((floor((trunc(depth)) / 5))*5))))
+    ELSE depth
+  END
+  AS round_depth,
+    CASE
+    WHEN (height/5 - floor(height/5) <> 0) THEN (height + (5 - (height - ((floor((trunc(height)) / 5))*5))))
+    ELSE height
+  END
+  AS round_height,
+COUNT(CASE
+        WHEN (width/5 - floor(width/5) <> 0) THEN (width + (5 - (width - ((floor((trunc(width)) / 5))*5))))
+        ELSE width
+      END)
+FROM notebooks_notebook
+GROUP BY round_width, round_depth, round_height
+ORDER BY round_width;

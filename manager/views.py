@@ -134,7 +134,7 @@ class TransactionCategoryAPIView(generics.ListCreateAPIView):
 
 
 class TransactionUserAPIView(generics.ListCreateAPIView):
-    """Make a transaction per suer"""
+    """Make a transaction per user"""
 
     queryset = Transaction.objects.filter(organization__exact=None)
     serializer_class = TransactionUserSerializer

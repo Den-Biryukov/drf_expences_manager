@@ -1,4 +1,4 @@
-DRF API for cost manager
+DRF API expense manager
 
 For start celery-beat run:
 

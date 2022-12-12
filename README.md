@@ -1,6 +1,6 @@
-DRF API expense manager
+## DRF API expense manager
 
-For start celery-beat run in different terminals:
+### For start celery-beat run in different terminals:
 
     -python manage.py runserver
 
